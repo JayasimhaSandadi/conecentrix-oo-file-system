@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.conectrix.fs.constants.FileSystemConstants.FILE_SEPARATOR;
-import static org.conectrix.fs.constants.FileSystemConstants.ILLEGAL_FILE_SYSTEM_TYPE;
+import static org.conectrix.fs.constants.FileSystemConstants.ILLEGAL_FILE_SYSTEM_OPERATION;
 import static org.conectrix.fs.constants.FileSystemConstants.PATH_ALREADY_EXISTS;
 import static org.conectrix.fs.constants.FileSystemConstants.PATH_NOT_FOUND;
 import static org.conectrix.fs.enums.FileSystemType.DRIVE;
@@ -40,16 +40,14 @@ public class FileSystemService {
             Entity drive = new Drive(name);
             entityMap.put(drive.getPath(), drive);
         } else {
-            // Check parent entity existence
-            Entity parent = entityMap.get(parentPath);
-            if (parent == null) throw new FileSystemException(PATH_NOT_FOUND);
-            if (entityMap.containsKey(parentPath + "\\" + name)) throw new FileSystemException(PATH_ALREADY_EXISTS);
+
+            Entity parent = getParentEntity(name, parentPath);
 
             Entity newEntity = switch (type) {
                 case FOLDER -> new Folder(name, parentPath);
                 case TEXT_FILE -> new TextFile(name, parentPath);
                 case ZIP_FILE -> new ZipFile(name, parentPath);
-                default -> throw new FileSystemException(ILLEGAL_FILE_SYSTEM_TYPE);
+                default -> throw new FileSystemException(ILLEGAL_FILE_SYSTEM_OPERATION);
             };
             entityMap.put(newEntity.getPath(), newEntity);
 
@@ -59,6 +57,16 @@ public class FileSystemService {
                 folder.addChild(newEntity);
             }
         }
+    }
+
+    private Entity getParentEntity(String name, String parentPath) {
+        // Check parent entity existence
+        Entity parent = entityMap.get(parentPath);
+        if (parent == null) throw new FileSystemException(ILLEGAL_FILE_SYSTEM_OPERATION);
+        if (parent instanceof TextFile) throw new FileSystemException(ILLEGAL_FILE_SYSTEM_OPERATION);
+        if (entityMap.containsKey(parentPath + "\\" + name)) throw new FileSystemException(PATH_ALREADY_EXISTS);
+
+        return parent;
     }
 
     /**
@@ -100,7 +108,6 @@ public class FileSystemService {
             entityMap.remove(entity.getPath());
         }
 
-
         // Now the entity can be removed from its parent's children
         String parentPath = entity.getPath().substring(0, entity.getPath().lastIndexOf('\\'));
         Entity parent = entityMap.get(parentPath);
@@ -122,11 +129,11 @@ public class FileSystemService {
     public void move(String sourcePath, String destinationPath) {
 
         if (FileSystemUtil.isEmpty(sourcePath) || FileSystemUtil.isEmpty(destinationPath)) {
-            throw new FileSystemException("Invalid source or destination path");
+            throw new FileSystemException(ILLEGAL_FILE_SYSTEM_OPERATION);
         }
 
         Entity entity = entityMap.get(sourcePath);
-        if (!(entity instanceof TextFile textFile)) throw new FileSystemException("Unsupported file type to move");
+        if (!(entity instanceof TextFile textFile)) throw new FileSystemException(ILLEGAL_FILE_SYSTEM_OPERATION);
 
         if (entityMap.containsKey(destinationPath + FILE_SEPARATOR + entity.getName())) {
             throw new FileSystemException(PATH_ALREADY_EXISTS);
@@ -159,12 +166,12 @@ public class FileSystemService {
      */
     public void writeToFile(String path, String content) {
         if (FileSystemUtil.isEmpty(path) || FileSystemUtil.isEmpty(content)) {
-            throw new FileSystemException("Invalid source or contents");
+            throw new FileSystemException(ILLEGAL_FILE_SYSTEM_OPERATION);
         }
 
         Entity entity = entityMap.get(path);
         if (!(entity instanceof TextFile))
-            throw new FileSystemException("Path not found or Not a text file");
+            throw new FileSystemException("Not a text file.");
         ((TextFile) entity).writeToFile(content);
     }
 
@@ -178,6 +185,8 @@ public class FileSystemService {
      */
     public void create(String type, String name, String parentPath) {
         if (FileSystemType.fromString(type) == DRIVE) {
+            if (!FileSystemUtil.isEmpty(parentPath))
+                throw new FileSystemException("A drive is not contained in any entity.");
             internalCreate(FileSystemType.fromString(type), name, "");
         } else {
             internalCreate(FileSystemType.fromString(type), name, parentPath);

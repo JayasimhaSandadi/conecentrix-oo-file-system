@@ -9,7 +9,7 @@ public class FileSystemConstants {
 
     public static final String PATH_ALREADY_EXISTS = "Path already exists";
 
-    public static final String ILLEGAL_FILE_SYSTEM_TYPE = "Illegal File System Type";
+    public static final String ILLEGAL_FILE_SYSTEM_OPERATION = "Illegal File System Operation";
 
     public static final String FILE_SEPARATOR = "\\";
 

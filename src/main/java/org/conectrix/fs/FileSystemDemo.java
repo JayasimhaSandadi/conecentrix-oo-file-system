@@ -18,7 +18,9 @@ public class FileSystemDemo {
             fs.create("Drive", "C:", "");
 
             fs.create("Folder", "Documents", "C:");
+
             fs.create("TextFile", "notes.txt", "C:\\Documents");
+
             fs.create("ZipFile", "archive.zip", "C:\\Documents");
 
             fs.writeToFile("C:\\Documents\\notes.txt", "Hello, World!");
@@ -36,10 +38,6 @@ public class FileSystemDemo {
             System.out.println("Number of entities, after deleting Users: " + fs.entityMap.size());
 
             System.out.println("Drive memory size : " + fs.entityMap.get("C:").calculateSize());
-
-            fs.create("Drive", "D:", "");
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }

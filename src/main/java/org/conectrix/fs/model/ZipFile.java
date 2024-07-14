@@ -41,10 +41,8 @@ public class ZipFile extends Entity {
 
     @Override
     public int calculateSize() {
-        int size = 0;
-        for (Entity child : children) {
-            size += child.calculateSize();
-        }
-        return size / 2; // Zip file size is half of the contained entities' sizes
+        return children.stream()
+                .mapToInt(Entity::calculateSize)
+                .sum() / 2;// Zip file size is half of the contained entities' sizes
     }
 }

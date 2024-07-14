@@ -50,10 +50,8 @@ public class Folder extends Entity {
 
     @Override
     public int calculateSize() {
-        int size = 0;
-        for (Entity child : children) {
-            size += child.calculateSize();
-        }
-        return size;
+        return children.stream()
+                .mapToInt(Entity::calculateSize)
+                .sum();
     }
 }
